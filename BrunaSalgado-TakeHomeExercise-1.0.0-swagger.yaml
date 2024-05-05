@@ -1,0 +1,278 @@
+openapi: 3.0.0
+info:
+  version: "1.0.0"
+  title: Online Bookstore API
+paths:
+
+  /books:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        200:
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        default:
+          $ref: '#/components/responses/default'
+
+  /books/search:
+    get:
+      parameters: 
+        - in: query
+          required: false
+          name: author
+          schema:
+            type: string
+        - in: query
+          required: false
+          name: title
+          schema:
+            type: string
+      responses:
+        200:
+          description: Books matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        default:
+          $ref: '#/components/responses/default'
+
+  /books/{isbn}:
+    get:
+      parameters: 
+      - in: path
+        name: isbn
+        required: true
+        schema:
+          type: integer
+          example: 9780544003415
+      responses:
+        200:
+          description: Returns detailed information about a book identified by its ISBN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        default:
+          $ref: '#/components/responses/default'
+
+  /cart:
+    post:
+      responses:
+        200:
+          description: Returns ID of new shopping cart
+        default:
+          $ref: '#/components/responses/default'
+  /cart/{cartId}:
+    get:
+      description: Retrieves current state of specified cart
+      parameters:
+      - in: path
+        name: cartId
+        required: true
+        schema:
+          type: string
+          example: 1234
+      responses:
+        200:
+          description: Current cart state retrieved
+        default:
+          $ref: '#/components/responses/default'
+  /cart/{cartId}/items:
+    post:
+      description: Adds a book to the specified cart
+      parameters:
+      - in: path
+        name: cartId
+        required: true
+        schema:
+          type: string
+          example: 1234
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        200:
+          description: Book added to cart
+        default:
+          $ref: '#/components/responses/default'
+          
+  /cart/{cartId}/items/{isbn}:
+    delete:
+      description: Removes specified book from specified cart
+      parameters:
+      - in: path
+        name: cartId
+        required: true
+        schema:
+          type: string
+          example: 1234
+      - in: path
+        name: isbn
+        required: true
+        schema:
+          type: string
+          example: 9780544003415
+      responses:
+        200:
+          description: Book removed from cart
+        default:
+          $ref: '#/components/responses/default'
+    patch:
+      description: Updates the quantity of a specified book in the specified cart
+      parameters: 
+      - in: path
+        name: cartId
+        required: true
+        schema:
+          type: string
+          example: 1234
+      - in: path
+        name: isbn
+        required: true
+        schema:
+          type: string
+          example: 9780544003415
+      requestBody:
+        content: 
+          application/json:
+            schema: 
+              type: number
+              example: 2
+      responses:
+        200:
+          description: Book quantity updated
+        default:
+          $ref: '#/components/responses/default'
+  /orders:
+    post:
+      description: Submits a new order based on cart contents
+      responses:
+        200:
+          description: New order submitted
+        default:
+          $ref: '#/components/responses/default'
+  /orders/{userId}:
+    get:
+      description: Retrieves a list of past orders of the user
+      parameters: 
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+          example: user1234
+      responses:
+        200:
+          description: Orders successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        default:
+          $ref: '#/components/responses/default'
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        isbn:
+          type: string
+          example: 9780544003415
+        title:
+          type: string
+          example: The Lord of the Rings
+        author:
+          type: string
+          example: J. R. R. Tolkien
+        price:
+          type: number
+          example: 167.70
+        description:
+          type: string
+          example: The Lord of the Rings is an high fantasy novel by the English author and scholar J. R. R. Tolkien. Set in Middle-earth, the story began as a sequel to Tolkien's 1937 children's book The Hobbit, but eventually developed into a much larger work.
+    CartItem:
+      type: object
+      properties:
+        isbn:
+          type: string
+          example: 9780544003415
+        quantity:
+          type: number
+          example: 1
+    Order:
+      type: object
+      properties:
+        orderId: 
+          type: string
+          example: order1234
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        totalCost:
+          type: number
+          example: 100.00
+        customerInfo: 
+          type: object
+          properties:
+            name:
+              type: string
+              example: John Doe
+            address:
+              type: string
+              example: 123 Main St apt 101 New York
+        status:
+          type: string
+          example: Processing
+  responses:
+    default:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: string
+                example: 500
+              message:
+                type: string
+                example: Unexpected error
+  parameters:
+    PageNumber:
+      in: query
+      name: pageNumber
+      description: Page number to return
+      required: false
+      schema:
+        type: integer
+        example: 1
+    PageSize:
+      in: query
+      name: pageSize
+      description: Number of resolts in the page
+      required: false
+      schema:
+        type: integer
+        example: 10
+        maximum: 100
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/BrunaSalgado/TakeHomeExercise/1.0.0
